@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">githubUserSearch</string>
+    <string name="username">username</string>
+    <string name="gambar">gambar</string>
+    <string name="search">search</string>
+    <string name="cek_koneksi">Cek koneksi anda!</string>
+    <string name="rate_limit">limited rate request, wait 1 minute</string>
+    <string name="empty">empty result!</string>
+    <string name="last_result">its all, last result!</string>
+</resources>
