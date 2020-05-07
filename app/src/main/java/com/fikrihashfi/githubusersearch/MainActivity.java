@@ -27,6 +27,7 @@ import com.fikrihashfi.githubusersearch.ui.user.UserViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Users> users = new ArrayList<>();
     private RecyclerView rvUsers;
     private int page = 1;
+    private int per_page = 10;
     private String query = null;
     private boolean loading = false;
     private final String STATE_LIST = "state_list";
@@ -64,18 +66,18 @@ public class MainActivity extends AppCompatActivity {
         inflater.inflate(R.menu.menu, menu);
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         final SearchView searchView = (androidx.appcompat.widget.SearchView) (menu.findItem(R.id.menu_search)).getActionView();
+        assert searchManager != null;
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setQueryHint(getResources().getString(R.string.search));
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
 
             @Override
             public boolean onQueryTextSubmit(String query) {
+                page=1;
                 setQuery(query);
-                showLoading(progressBar, true);
-                boolean load = userViewModel.query(getApplicationContext(), userAdapter, "new", query, 1, 10);
-                if(load==true){
-                    showLoading(progressBar, false);
-                }
+                showLoading(true);
+                userViewModel.query(getApplicationContext(), userAdapter, "new", query, page, per_page);
+                showLoading(false);
                 searchView.clearFocus();
                 return false;
             }
@@ -105,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(STATE_LIST, userAdapter.getList());
     }
@@ -114,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(getApplicationContext(), "Kamu memilih " + user.getLogin(), Toast.LENGTH_SHORT).show();
     }
 
-    private void showLoading(ProgressBar progressBar, Boolean state) {
+    public void showLoading(Boolean state) {
         if (state) {
             loading = true;
             progressBar.setVisibility(View.VISIBLE);
@@ -141,25 +143,15 @@ public class MainActivity extends AppCompatActivity {
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
                 int visibleItemCount = recyclerView.getChildCount();
-                int totalItemCount = recyclerView.getLayoutManager().getItemCount();
+                int totalItemCount = Objects.requireNonNull(recyclerView.getLayoutManager()).getItemCount();
                 int firstVisibleItem = ((LinearLayoutManager) recyclerView.getLayoutManager()).findFirstVisibleItemPosition();
                 int visibleThreshold = 0;
                 if(totalItemCount > visibleItemCount) {
                     if (!loading && (totalItemCount - visibleItemCount)
                             <= (firstVisibleItem + visibleThreshold)) {
-                        showLoading(progressBar, true);
-                        final Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
                                 page++;
-                                boolean load = userViewModel.query(getApplicationContext(), userAdapter, "load", query, page, 10);
-                                if (load == true) {
-                                    showLoading(progressBar, false);
-                                }
+                                userViewModel.query(getApplicationContext(), userAdapter, "load", query, page, per_page);
                             }
-                        }, 2000);
-                    }
                 }
             }
         });
